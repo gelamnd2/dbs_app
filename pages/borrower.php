@@ -127,6 +127,7 @@ if(isset($_POST['add_borrower'])){
         </div>
       </div>
     </div>
+    <h2></h2>
     <div class="col-12">
       <div class="row g-3">
         <div class="col-12 col-lg-6">
