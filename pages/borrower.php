@@ -71,8 +71,6 @@ if(isset($_POST['add_borrower_address'])){
 ?>
  
  
- 
- 
 <!doctype html>
 <html lang="en">
 <head>
