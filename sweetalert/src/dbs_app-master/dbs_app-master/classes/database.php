@@ -1,17 +1,17 @@
 <?php
- 
+
 class database{
     function opencon(): PDO{
     return new PDO(
 dsn: 'mysql:host=localhost;
-    dbname=my_library',
+    dbname=mylibrary',
     username: 'root',
     password: '');
     }
-   
+    
     function insertUser($email,$password_hash,$is_active){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO Users (username,user_password_hash,is_active) VALUES (?,?,?)');
@@ -19,19 +19,19 @@ dsn: 'mysql:host=localhost;
             $user_id = $con->lastInsertId();
             $con->commit();
             return $user_id;
- 
- 
+
+
         }catch(PDOException $e){
             if($con->inTransaction()){
                 $con->rollBack();
                 }
                 throw $e;
-        }
+        } 
     }
-   
+    
     function insertBorrower($firstname,$lastname,$email,$phone,$member_since,$is_active){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO Borrowers (borrower_firstname,borrower_lastname,borrower_email,borrower_phone_number,borrower_member_since,is_active) VALUES(?,?,?,?,?,?)');
@@ -46,10 +46,10 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }
     }
- 
+
     function insertBorrowerUser($user_id, $borrower_id){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO BorrowerUser (user_id, borrower_id) VALUES(?,?)');
@@ -63,16 +63,16 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }    
     }
- 
- 
+
+
     function  viewBorrowerUser(){
         $con = $this->opencon();
         return $con->query("SELECT * from Borrowers")->fetchAll();
     }
- 
+
     function insertBorrowerAddress($borrower_id,$house_number,$street,$barangay,$city,$province,$postal_code,$is_primary){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO BorrowerAddress (borrower_id,ba_house_number,ba_street,ba_barangay,ba_city,ba_province,ba_postal_code,is_primary) VALUES(?,?,?,?,?,?,?,?)');
@@ -106,36 +106,36 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }
     }
- 
+
         function viewBooks(){
         $con = $this->opencon();
         return $con->query('SELECT * from Books')->fetchAll();
     }
- 
+
      function insertBookCopy($book_id, $status){
         $con = $this->opencon();
- 
+
         $book_id = (int)$book_id;
- 
+
         try{
             $con->beginTransaction();
- 
+
             $range_start = $book_id * 100;
             $range_end = $range_start + 99;
- 
+
             $stmt = $con->prepare('SELECT COALESCE(MAX(copy_id), 0) FROM Bookcopy WHERE copy_id BETWEEN ? AND ? FOR UPDATE');
             $stmt->execute([$range_start, $range_end]);
             $max_copy_id = (int)$stmt->fetchColumn();
- 
+
             $copy_id = ($max_copy_id > 0) ? $max_copy_id + 1 : $range_start + 1;
- 
+
             if($copy_id > $range_end){
                 throw new RuntimeException('Cannot add more than 99 books.');
             }
- 
+
             $stmt = $con->prepare('INSERT INTO Bookcopy (copy_id, book_id, bc_status) VALUES(?,?,?)');
             $stmt->execute([$copy_id, $book_id, $status]);
- 
+
             $con->commit();
             return $copy_id;
         }catch(Throwable $e){
@@ -145,12 +145,12 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }
     }
- 
+
         function viewAuthors(){
         $con = $this->opencon();
         return $con->query('SELECT * from Authors')->fetchAll();
     }
- 
+
     function insertBookAuthors( $book_id,$author_id){
         $con = $this->opencon();
      
@@ -169,15 +169,15 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }
     }
- 
+
         function viewGenres(){
         $con = $this->opencon();
         return $con->query('SELECT * from Genres')->fetchAll();
     }
- 
+
     function addGenre($genre_id, $book_id){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO Bookgenre (genre_id, book_id) VALUES(?,?)');
@@ -191,7 +191,7 @@ dsn: 'mysql:host=localhost;
             throw $e;
         }    
     }
- 
+
     function viewCopies(){
         $con = $this->opencon();
         return $con->query("SELECT
@@ -209,27 +209,27 @@ dsn: 'mysql:host=localhost;
             1;
                 ")->fetchAll();
             }
- 
+
             function insertLoan($borrower_id, $processed_by_user_id, $loan_date, $loan_status){
     $con = $this->opencon();
- 
+
     try{
         $con->beginTransaction();
- 
+
         $stmt = $con->prepare("
             INSERT INTO loan (borrower_id, processed_by_user_id, loan_date, loan_status)
             VALUES (?, ?, ?, ?)");
- 
+
         $stmt->execute([
             $borrower_id,
             $processed_by_user_id,
             $loan_date,
             $loan_status
         ]);
- 
+
         $con->commit();
         return true;
- 
+
     }catch(PDOException $e){
         if($con->inTransaction()){
             $con->rollBack();
@@ -237,11 +237,11 @@ dsn: 'mysql:host=localhost;
         throw $e;
     }
 }
- 
+
 function viewLoans(){
     $con = $this->opencon();
     return $con->query("
-        SELECT
+        SELECT 
             loan.loan_id,
             CONCAT(borrowers.borrower_firstname, ' ', borrowers.borrower_lastname) AS borrower_name,
             loan.loan_status,
@@ -252,7 +252,7 @@ function viewLoans(){
         INNER JOIN users  ON loan.processed_by_user_id = users.user_id
     ")->fetchAll();
 }
- 
+
 function updateBook($book_id, $title, $isbn, $year, $publisher)
 {
     $con = $this->opencon();
@@ -285,7 +285,7 @@ function countBook(){
     $con = $this->opencon();
     return $con->query("SELECT COUNT(*) AS total_books FROM Books")->fetchColumn();
 }
- 
+
     function viewDashboardOverview(){
         $con = $this->opencon();
         return $con->query("SELECT
@@ -299,12 +299,12 @@ function countBook(){
                AND li_duedate < CURDATE()) AS overdue_items
         ")->fetch();
     }
- 
- 
+
+
     function viewRecentLoans($limit = 5){
         $con = $this->opencon();
         $limit = (int)$limit;
- 
+
         $stmt = $con->prepare("SELECT
             loan.loan_id,
             CONCAT(borrowers.borrower_firstname, ' ', borrowers.borrower_lastname) AS fullname,
@@ -317,13 +317,13 @@ function countBook(){
         ORDER BY loan.loan_date DESC, loan.loan_id DESC
         LIMIT {$limit}");
         $stmt->execute();
- 
+
         return $stmt->fetchAll();
     }
- 
+
        function addAuthor($firstname, $lastname, $birth, $nationality){
         $con = $this->opencon();
- 
+
         try{
             $con->beginTransaction();
             $stmt = $con->prepare('INSERT INTO authors (author_firstname,author_lastname,author_birthyear,author_nationality) VALUES(?,?,?,?)');
@@ -337,34 +337,34 @@ function countBook(){
             throw $e;
         }    
     }
- 
+
     function addGenres($genre_name)
 {
     $con = $this->opencon();
- 
+
     try {
         $con->beginTransaction();
- 
+
         $stmt = $con->prepare("
             INSERT INTO genres (genre_name)
             VALUES (?)
         ");
- 
+
         $stmt->execute([$genre_name]);
- 
+
         $con->commit();
         return true;
- 
+
     } catch (Exception $e) {
- 
+
         if ($con->inTransaction()) {
             $con->rollBack();
         }
- 
+
         throw new Exception($e->getMessage());
     }
 }
- 
+
 function getAuthors()
 {
     $con = $this->opencon();
@@ -379,219 +379,6 @@ function getGenres()
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
- 
-function deletebooks($book_id){
-    $con = $this->opencon();
-    try {
-        $con->beginTransaction();
- 
-        $stmtCopies = $con->prepare('DELETE FROM BookCopy WHERE book_id = ?');
-        $stmtCopies->execute([$book_id]);
- 
-        $stmtGenre = $con->prepare('DELETE FROM BookGenre WHERE book_id = ?');
-        $stmtGenre->execute([$book_id]);
- 
-        $stmtBA = $con->prepare('DELETE FROM BookAuthors WHERE book_id = ?');
-        $stmtBA->execute([$book_id]);
- 
-        $stmtBook = $con->prepare('DELETE FROM Books WHERE book_id = ?');
-        $stmtBook->execute([$book_id]);
- 
-        $con->commit();
-        return true;
-    }catch (PDOException $e) {
-        if ($con->inTransaction()) {
-            $con->rollBack();
-        }
-        throw $e;
-    }
+
+
 }
- function deleteAuthor($author_id){
- 
-    $con = $this->opencon();
- 
-    try {
- 
-        $con->beginTransaction();
- 
-        // remove relationships
-        $stmt1 = $con->prepare("DELETE FROM bookauthors WHERE author_id = ?");
-        $stmt1->execute([$author_id]);
- 
-        // delete author
-        $stmt2 = $con->prepare("DELETE FROM authors WHERE author_id = ?");
-        $stmt2->execute([$author_id]);
- 
-        $con->commit();
-        return true;
- 
-    } catch(PDOException $e){
- 
-        if($con->inTransaction()){
-            $con->rollBack();
-        }
- 
-        throw $e;
-    }
-}
- 
-function updateAuthor($author_id, $firstname, $lastname, $birth, $nationality)
-{
-    $con = $this->opencon();
- 
-    try {
-        $con->beginTransaction();
- 
-        $stmt = $con->prepare("
-            UPDATE authors
-            SET author_firstname = ?,
-                author_lastname = ?,
-                author_birthyear = ?,
-                author_nationality = ?
-            WHERE author_id = ?
-        ");
- 
-        $stmt->execute([$firstname, $lastname, $birth, $nationality, $author_id]);
- 
-        $con->commit();
-        return true;
- 
-    } catch (PDOException $e) {
- 
-        if ($con->inTransaction()) {
-            $con->rollBack();
-        }
- 
-        throw $e;
-    }
-}
- 
-function updateGenre($genre_id, $genre_name)
-{
-    $con = $this->opencon();
- 
-    try {
-        $con->beginTransaction();
- 
-        $stmt = $con->prepare("
-            UPDATE genres
-            SET genre_name = ?
-            WHERE genre_id = ?
-        ");
- 
-        $stmt->execute([$genre_name, $genre_id]);
- 
-        $con->commit();
-        return true;
- 
-    } catch (PDOException $e) {
- 
-        if ($con->inTransaction()) {
-            $con->rollBack();
-        }
- 
-        throw $e;
-    }
-}
- 
-function deleteGenre($genre_id){
-    $con = $this->opencon();
-    try {
-        $con->beginTransaction();
-          $stmtGenre = $con->prepare('DELETE FROM BookGenre WHERE genre_id = ?');
-        $stmtGenre->execute([$genre_id]);
- 
-        $stmtCopies = $con->prepare('DELETE FROM Genres WHERE genre_id = ?');
-        $stmtCopies->execute([$genre_id]);
- 
- 
- 
-        $con->commit();
-        return true;
-    }catch (PDOException $e) {
-        if ($con->inTransaction()) {
-            $con->rollBack();
-        }
-        throw $e;
-    }
-}
- 
-function getActiveBorrowers(){
-    $con = $this->opencon();
-    return $con->query("SELECT borrower_id, CONCAT(borrower_firstname, ' ', borrower_lastname)AS borrower_name FROM borrowers WHERE is_active = 1;")->fetchAll();
-}
- 
-function getAvailableCopies(){
-   $con = $this->opencon();
-    return $con->query("SELECT bookcopy.copy_id, books.book_id, books.book_title FROM books JOIN bookcopy ON books.book_id = bookcopy.book_id WHERE bookcopy.bc_status = 'AVAILABLE' ORDER BY books.book_title")->fetchAll();
-}
- 
-function createLoanWithItems($borrower_id,$processed_by_user_id,
-    $copy_ids,$li_duedate,$condition_out){
-        $con = $this->opencon();
-        try{
-            $con->beginTransaction();
- 
-            $insertLoanStmt = $con->prepare("INSERT INTO Loan(borrower_id, processed_by_user_id, loan_status, loan_date)VALUES (?, ?, 'OPEN', NOW())");
-$insertLoanStmt->execute([$borrower_id,
-$processed_by_user_id]);
- 
-$loan_id = $con->lastInsertId();
- 
-$checkCopyStmt = $con->prepare("SELECT bc_status FROM BookCopy WHERE copy_id = ?");
- 
-$activeLoanStmt =
-$con->prepare("SELECT COUNT(*) as active_count FROM LoanItem
-    JOIN Loan ON LoanItem.loan_id = Loan.loan_id
-    WHERE LoanItem.copy_id = ?
-    AND LoanItem.li_returned_at IS NULL
-    AND Loan.loan_status = 'OPEN'");
- 
- 
-$insertLoanItemStmt = $con->prepare("INSERT INTO LoanItem(loan_id, copy_id, li_duedate, condition_out) VALUES(?,?,?,?)");
- 
-$updateCopyStmt = $con->prepare("UPDATE BookCopy SET bc_status = 'ON_LOAN' WHERE copy_id=?"); //101, 102
- 
- 
- 
-        
- 
-
-
-foreach ($copy_ids as $copy_id) {
-
-    $checkCopyStmt->execute([$copy_id]); //101
-    $copyStatus = $checkCopyStmt->fetch();
-
-    if (!$copyStatus) {
-        throw new Exception("Copy ID $copy_id does not exist.");
-    }
-
-    if ($copyStatus['bc_status'] !== 'AVAILABLE') {
-        throw new Exception("Copy ID $copy_id is not available.");
-    }
-
-    $activeLoanStmt->execute([$copy_id]);
-    $activeLoan = $activeLoanStmt->fetch();
-
-    if ($activeLoan['active_count'] > 0) {
-        throw new Exception("Copy already on active loan.");
-    }
-
-    $insertLoanItemStmt->execute([$loan_id, $copy_id, $li_duedate, $condition_out]);
-    $updateCopyStmt->execute([$copy_id]);
-}
-
-    $con->commit();
-    return $loan_id;
-
-    } catch (Exception $e) {
-        if ($con->inTransaction()) {
-            $con->rollBack();
-        }
-        throw $e;
-    }
-}            
-}
-
- 
